@@ -1,6 +1,6 @@
 # Viral Clip Finder 🚀
 
-An AI-powered tool that analyzes YouTube podcast transcripts and finds the most viral short-form clip opportunities for TikTok, YouTube Shorts, and Instagram Reels.
+An AI-powered tool that analyzes public YouTube videos and finds promising short-form clip opportunities for TikTok, YouTube Shorts, and Instagram Reels.
 
 Built for creators who want to turn long-form content into high-performing short clips instantly.
 
@@ -8,16 +8,16 @@ Built for creators who want to turn long-form content into high-performing short
 
 ## What It Does
 
-Paste a YouTube video URL and Viral Clip Finder will:
+Paste a public YouTube video URL and Viral Clip Finder will:
 
-- Fetch the video transcript
-- Preserve real transcript timestamps
-- Analyze the conversation using OpenAI
-- Identify the **3 strongest viral clip moments**
+- Analyze video and audio content using Gemini 3.8 Flash
+- Identify **five distinct clip candidates**
 - Return:
-  - Accurate timestamps
+  - Start and end timestamps in seconds
   - A compelling hook
-  - Why the moment is likely to perform well
+  - An explanation and seven weighted editorial ratings
+
+The ratings are a selection heuristic, not a probability of virality. The app does not create or download video clips.
 
 ---
 
@@ -40,7 +40,8 @@ Viral Clip Finder automates that process by using AI to identify moments with:
 - **Next.js 16**
 - **React**
 - **TypeScript**
-- **OpenAI API**
+- **Google Gemini API** (`@google/genai`)
+- **OpenAI API** (preserved transcript-based endpoint path)
 - **youtube-transcript**
 - **Turbopack**
 
@@ -48,24 +49,14 @@ Viral Clip Finder automates that process by using AI to identify moments with:
 
 ## How It Works
 
-### 1. Transcript Extraction
-The app fetches transcript segments directly from YouTube.
+### Gemini video analysis
+The default UI briefly attempts to fetch YouTube captions and passes up to 20,000 characters as optional speech context when available. Caption errors or timeouts are ignored. `/api/analyze` sends the validated public YouTube URL directly to Gemini either way. It does not download the video or infer duration from transcript timestamps. Gemini returns five timestamped candidates with seven rubric ratings; the server validates the response and calculates a weighted 0–100 editorial score.
 
-### 2. Timestamp Preservation
-Each transcript segment keeps its real timestamp.
+The transcript endpoint and prior OpenAI transcript analysis remain available to callers that explicitly request `provider: "openai"` and include transcript segments. That path continues to return three candidates and is not used by the default UI flow.
 
-### 3. AI Analysis
-Timestamped transcript data is sent to OpenAI for analysis.
+Gemini's direct YouTube URL input is currently documented by Google as a preview and supports public videos only. The default static video mode samples frames at 1 FPS; fast visual events can be missed. Candidate timestamps are model estimates: the server checks that they are finite, nonnegative, ordered, and rejects pairs that overlap by more than half of the shorter moment, but it cannot verify their upper bound because the app does not independently retrieve source duration. A real-video check requires a configured `GEMINI_API_KEY`; no key is needed for local validation tests.
 
-### 4. Viral Clip Selection
-The model identifies the top 3 short-form moments based on virality potential.
-
-### 5. Output
-Users receive:
-
-- Start / end timestamp
-- Viral hook
-- Reasoning
+The 0–100 editorial score normalizes each 1–5 rating and applies these weights: hook strength 20%, emotional impact 20%, story completeness 15%, entertainment/informational value 15%, shareability 15%, audio/visual engagement 10%, and topic relevance 5%. This is a heuristic, not a probability of virality.
 
 ---
 
@@ -77,9 +68,10 @@ Install dependencies:
 npm install
 ```
 
-Create a `.env.local` file:
+Create a `.env.local` file with the server-side keys for the provider paths you use:
 
 ```env
+GEMINI_API_KEY=your_gemini_api_key
 OPENAI_API_KEY=your_openai_api_key
 ```
 
@@ -110,7 +102,7 @@ http://localhost:3000
 ## Future Improvements
 
 - Direct clip export
-- More than 3 generated clips
+- Generated video clips
 - Virality scoring
 - Downloadable timestamps
 - Auto-caption generation

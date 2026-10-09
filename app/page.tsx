@@ -1,12 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { formatSupplementalTranscript } from "@/app/lib/clip-analysis";
 
 type Clip = {
-  start: string;
-  end: string;
-  reason: string;
+  start: number | string;
+  end: number | string;
   hook: string;
+  explanation?: string;
+  reason?: string;
+  totalScore?: number;
+  scores?: {
+    hookStrength: number;
+    emotionalImpact: number;
+    storyCompleteness: number;
+    entertainmentOrInformation: number;
+    shareability: number;
+    audioVisualEngagement: number;
+    topicRelevance: number;
+  };
 };
 
 export default function Home() {
@@ -16,12 +28,7 @@ export default function Home() {
   const [loadingText, setLoadingText] = useState("");
   const [error, setError] = useState("");
 
-  function extractVideoId(input: string) {
-    const match = input.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    return match?.[1] || input;
-  }
-
-  function formatTime(input: any) {
+  function formatTime(input: number | string) {
     const seconds =
       typeof input === "number"
         ? input
@@ -35,6 +42,11 @@ export default function Home() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   }
 
+  function extractVideoId(input: string) {
+    const match = input.match(/(?:v=|youtu\.be\/|youtube\.com\/(?:shorts|live|embed)\/)([a-zA-Z0-9_-]{11})/);
+    return match?.[1] || input;
+  }
+
   async function handleGenerate() {
     if (!url.trim()) {
       setError("Please paste a YouTube URL");
@@ -42,52 +54,51 @@ export default function Home() {
     }
 
     setLoading(true);
-    setLoadingText("Fetching transcript...");
+    setLoadingText("Analyzing video...");
     setError("");
     setClips([]);
 
-    const transcriptRes = await fetch("/api/transcript", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ videoId: extractVideoId(url) })
-    });
+    try {
+      let segments: unknown[] | undefined;
+      try {
+        const transcriptRes = await fetch("/api/transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoId: extractVideoId(url) }),
+          signal: AbortSignal.timeout(5000),
+        });
+        const transcriptData = await transcriptRes.json();
+        if (transcriptRes.ok && Array.isArray(transcriptData.segments)) {
+          segments = transcriptData.segments;
+        }
+      } catch {
+        // Caption retrieval is optional; Gemini can analyze the video directly.
+      }
 
-    const transcriptData = await transcriptRes.json();
+      const captionContext = formatSupplementalTranscript(segments);
+      setLoadingText("Analyzing video...");
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, provider: "gemini", captionContext }),
+      });
+      const data = await res.json();
 
-    if (!transcriptRes.ok || !Array.isArray(transcriptData.segments)) {
-      setError("Could not fetch transcript for this video");
+      if (!res.ok) {
+        setError(data.error || "Request failed");
+        return;
+      }
+      if (!Array.isArray(data.clips)) {
+        setError("The analysis response was incomplete. Please try again.");
+        return;
+      }
+      setClips(data.clips);
+    } catch {
+      setError("Could not reach the analysis service. Check your connection and try again.");
+    } finally {
       setLoading(false);
       setLoadingText("");
-      return;
     }
-
-    setLoadingText("Finding viral moments...");
-
-    const res = await fetch("/api/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        url,
-        segments: transcriptData.segments
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || "Request failed");
-      setLoading(false);
-      setLoadingText("");
-      return;
-    }
-
-    setClips(data.clips);
-    setLoading(false);
-    setLoadingText("");
   }
 
   return (
@@ -127,8 +138,7 @@ export default function Home() {
             marginBottom: 30
           }}
         >
-          Paste a YouTube podcast link and instantly surface the most viral
-          short-form moments.
+          Paste a public YouTube link to find five promising short-form moments.
         </p>
 
         <div
@@ -230,8 +240,19 @@ export default function Home() {
                     lineHeight: 1.6
                   }}
                 >
-                  {clip.reason}
+                  {clip.explanation || clip.reason}
                 </p>
+                {clip.scores && (
+                  <div style={{ marginTop: 16, color: "#94a3b8", fontSize: 13, lineHeight: 1.8 }}>
+                    <strong style={{ color: "#60a5fa" }}>Editorial score: {clip.totalScore}/100</strong>
+                    <div>
+                      Hook {clip.scores.hookStrength}/5 · Emotion {clip.scores.emotionalImpact}/5 ·
+                      Story {clip.scores.storyCompleteness}/5 · Value {clip.scores.entertainmentOrInformation}/5 ·
+                      Shareability {clip.scores.shareability}/5 · Audio/visual {clip.scores.audioVisualEngagement}/5 ·
+                      Relevance {clip.scores.topicRelevance}/5
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
