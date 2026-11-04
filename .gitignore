@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local evaluation model outputs
+/evaluation/mvp-1.5/raw/

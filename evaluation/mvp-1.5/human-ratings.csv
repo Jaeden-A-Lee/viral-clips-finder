@@ -1,0 +1,44 @@
+video_id,prompt_version,run_id,candidate_rank,start_seconds,end_seconds,hook_quality_1_5,standalone_context_1_5,storytelling_1_5,pacing_1_5,emotional_impact_1_5,visual_audio_contribution_1_5,overall_quality_1_5,timestamp_boundary_accuracy_1_5,start_boundary_error_seconds,end_boundary_error_seconds,notes,human_preference_rank
+qSess5R1MHU,baseline-A,3dab30e9-0cd0-43df-afe1-9844d9c6a432,1,2064,2152,4.0,4.5,4.5,2.5,3.0,3.0,2.5,4.5,0,1,"- Human preference: #4 of 5.
+- Hook captures attention; the topic and story about Steph's off-ball threat are understandable on their own.
+- Pacing is weak: the segment feels too long, includes extended talking, and loses attention. Tighten to the most compelling points.
+- Informative and mildly exciting for basketball fans, but less compelling to general viewers.
+- LeBron's delivery and reactions add value; the podcast has few visuals beyond the speakers.
+- Would post on a basketball/LeBron-focused account, not a general viral-clips account.
+- Start boundary is good; finish one second earlier (35:51).
+- Full rationale in Clip Rating Records.",4
+qSess5R1MHU,baseline-A,3dab30e9-0cd0-43df-afe1-9844d9c6a432,2,90,162,4.5,4.5,4.5,4.5,4.5,4.0,4.5,3.5,-4,0,"- Human preference: #1 of 5 (best).
+- Hook captures attention; the story of how Steph contributed to Steve Nash's retirement is clear.
+- Strong storytelling and pacing: maintained interest throughout despite the longer clip.
+- Funny, interesting, exciting and informative; reactions and delivery are strong.
+- Podcast footage has no visual additions beyond the speakers.
+- Would post this clip.
+- Start at 1:34 rather than Gemini's 1:30 (four seconds later); ending at 2:42 is good.
+- Standalone context 4.5/5 was manually supplied by the human reviewer. Boundary accuracy was calculated later from the recorded timestamp errors using the boundary-error rubric.",1
+qSess5R1MHU,baseline-A,3dab30e9-0cd0-43df-afe1-9844d9c6a432,3,818,903,4.0,4.5,4.5,4.0,4.5,4.0,4.0,3.5,0,4,"- Human preference: #3 of 5.
+- Opening at 13:38 is accurate and attention-grabbing, although not an exceptional hook.
+- Standalone idea is clear: Steph's belief that lifting weights affected his shot.
+- Strong story, informative details and funny moments (including lifting for vanity).
+- Pacing is good overall; trim early 'um' filler, pauses and incomplete thoughts.
+- Reactions and delivery help; no additional visuals beyond the podcast speakers.
+- Would post this clip.
+- Starting point is good; end at 14:59 rather than 15:03 (four seconds earlier).
+- Boundary accuracy was calculated later from the recorded timestamp errors using the boundary-error rubric.",3
+qSess5R1MHU,baseline-A,3dab30e9-0cd0-43df-afe1-9844d9c6a432,4,1595,1712,4.0,4.0,4.0,3.5,3.5,3.5,3.0,4.0,0,2,"- Human preference: #5 of 5.
+- 'That's a great question' immediately creates curiosity; topic becomes clear after the first couple of seconds.
+- Clear discussion of Steph's influence on basketball, increased three-point shooting and younger players emulating him.
+- Some engagement, but pacing can improve: long segment with pauses and dead air to remove.
+- Informative for committed basketball fans; comparatively less exciting for general viewers.
+- Reactions and delivery are decent, with no extra footage beyond the podcast.
+- Would post for a basketball niche, not a general viral-clips account.
+- Start boundary is good; end at 28:30 rather than 28:32 (two seconds earlier).
+- Boundary accuracy was calculated later from the recorded timestamp errors using the boundary-error rubric.",5
+qSess5R1MHU,baseline-A,3dab30e9-0cd0-43df-afe1-9844d9c6a432,5,428,479,4.5,5.0,5.0,5.0,4.5,4.0,4.0,5.0,0,0,"- Human preference: #2 of 5.
+- Strong immediate hook: Steve Nash asks Steph about his 'quick release'; context is immediately understandable.
+- Excellent storytelling and pacing; short, focused segment with little or no filler.
+- Informative and interesting because a world-class shooter explains his craft.
+- Basketball subject matter may narrow the audience, but expertise could attract nonfans; lacks a big comedic moment.
+- Good reactions and delivery; the podcast has no added visuals.
+- Would post this clip.
+- Both the 7:08 start and 7:59 end are good.
+- Boundary accuracy was calculated later from the recorded timestamp errors using the boundary-error rubric.",2

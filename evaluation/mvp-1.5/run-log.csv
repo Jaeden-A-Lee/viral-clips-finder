@@ -1,0 +1,2 @@
+model_id,prompt_version,video_id,run_number,run_id,test_date,processing_settings,transcript_available,raw_output_location,reviewer,observations
+gemini-3.8-flash,baseline-A,qSess5R1MHU,1,3dab30e9-0cd0-43df-afe1-9844d9c6a432,2026-10-22,"{""video_input"":""public YouTube URL"",""video_processing"":""not explicitly configured; API default applies"",""generation_config"":""not explicitly configured; model/API defaults apply""}",yes,evaluation/mvp-1.5/raw/viral-clip-finder-qSess5R1MHU-2026-10-22T02-42-32-853Z.json,,
