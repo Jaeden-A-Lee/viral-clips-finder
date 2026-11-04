@@ -175,7 +175,10 @@ export async function POST(req: Request) {
 
     const candidates = parseGeminiCandidates(interaction.output_text);
 
-    return NextResponse.json({ provider: "gemini", clips: candidates });
+    return NextResponse.json(
+      { provider: "gemini", clips: candidates },
+      { headers: { "x-analysis-model": GEMINI_MODEL } },
+    );
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("Gemini returned")) {
       return NextResponse.json({ error: "Gemini returned an unreadable response. Please try again." }, { status: 502 });

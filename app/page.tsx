@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { formatSupplementalTranscript } from "@/app/lib/clip-analysis";
 
+const EVALUATION_PROMPT_VERSION = "baseline-A";
+
 type Clip = {
   start: number | string;
   end: number | string;
@@ -24,6 +26,8 @@ type Clip = {
 export default function Home() {
   const [url, setUrl] = useState("");
   const [clips, setClips] = useState<Clip[]>([]);
+  const [analysisResponse, setAnalysisResponse] = useState<unknown | null>(null);
+  const [analysisMetadata, setAnalysisMetadata] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
   const [error, setError] = useState("");
@@ -47,6 +51,38 @@ export default function Home() {
     return match?.[1] || input;
   }
 
+  function getVideoIdForFilename(input: string) {
+    try {
+      const parsedUrl = new URL(input);
+      const host = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+      const videoId = host === "youtu.be"
+        ? parsedUrl.pathname.split("/").filter(Boolean)[0]
+        : host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com"
+          ? parsedUrl.searchParams.get("v") ?? parsedUrl.pathname.match(/^\/(?:shorts|live|embed)\/([\w-]{11})(?:\/|$)/)?.[1]
+          : null;
+
+      return videoId && /^[\w-]{11}$/.test(videoId) ? videoId : "video";
+    } catch {
+      return "video";
+    }
+  }
+
+  function downloadEvaluationJson() {
+    if (analysisResponse === null || analysisMetadata === null) return;
+
+    const exportObject = { metadata: analysisMetadata, response: analysisResponse };
+    const blob = new Blob([JSON.stringify(exportObject, null, 2)], { type: "application/json" });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const timestamp = String(analysisMetadata.analysis_timestamp_utc).replace(/[:.]/g, "-");
+    link.href = downloadUrl;
+    link.download = `viral-clip-finder-${analysisMetadata.video_id}-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
+  }
+
   async function handleGenerate() {
     if (!url.trim()) {
       setError("Please paste a YouTube URL");
@@ -57,6 +93,8 @@ export default function Home() {
     setLoadingText("Analyzing video...");
     setError("");
     setClips([]);
+    setAnalysisResponse(null);
+    setAnalysisMetadata(null);
 
     try {
       let segments: unknown[] | undefined;
@@ -76,6 +114,19 @@ export default function Home() {
       }
 
       const captionContext = formatSupplementalTranscript(segments);
+      const requestMetadata = {
+        run_id: crypto.randomUUID(),
+        analysis_timestamp_utc: new Date().toISOString(),
+        video_id: getVideoIdForFilename(url),
+        prompt_version: EVALUATION_PROMPT_VERSION,
+        supplemental_transcript_used: Boolean(captionContext),
+        transcript_available: segments === undefined ? "unknown" : segments.length > 0 ? "yes" : "no",
+        processing_settings: {
+          video_input: "public YouTube URL",
+          video_processing: "not explicitly configured; API default applies",
+          generation_config: "not explicitly configured; model/API defaults apply",
+        },
+      };
       setLoadingText("Analyzing video...");
       const res = await fetch("/api/analyze", {
         method: "POST",
@@ -93,6 +144,11 @@ export default function Home() {
         return;
       }
       setClips(data.clips);
+      setAnalysisResponse(data);
+      setAnalysisMetadata({
+        ...requestMetadata,
+        model_id: res.headers.get("x-analysis-model"),
+      });
     } catch {
       setError("Could not reach the analysis service. Check your connection and try again.");
     } finally {
@@ -203,6 +259,23 @@ export default function Home() {
               gap: 20
             }}
           >
+            {process.env.NODE_ENV === "development" && analysisResponse !== null && analysisMetadata !== null && (
+              <button
+                onClick={downloadEvaluationJson}
+                style={{
+                  justifySelf: "start",
+                  padding: "12px 18px",
+                  borderRadius: 10,
+                  border: "1px solid #475569",
+                  background: "#1e293b",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700
+                }}
+              >
+                Download Evaluation JSON
+              </button>
+            )}
             {clips.map((clip, i) => (
               <div
                 key={i}
